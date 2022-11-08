@@ -17,12 +17,12 @@ A Chrome extension to automate reporting of scam accounts on Twitter.
 - [ ] Basic reporting stats (suspended, blocked, 
 
 #### Extension options:
-Setup:
+###### Setup:
 - [ ] Set custom banlist URL
 - [ ] Set banlist sync frequency
 - [ ] Set default "additional context" text for reporting...
 - [ ] Toggle between "Report" or "Report & Block"
-Notifications:
+###### Notifications:
 - [ ] Popup Notifications on/off
 
 #### Notifications:
