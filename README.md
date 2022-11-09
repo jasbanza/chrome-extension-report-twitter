@@ -12,7 +12,10 @@ A Chrome extension to automate reporting of scam accounts on Twitter.
 - [ ] repeat for the next account to report...
 
 #### UI:
-- [ ] Button - Start Reporting
+- [x] Popup screen
+- [x] Button - Start Reporting
+- [x] Button - Settings
+- [x] Button - Detach window (persists UI)
 - [ ] Get ban status
 - [ ] Basic reporting stats (suspended, blocked, 
 
