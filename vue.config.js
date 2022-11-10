@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs");
+const { VuetifyPlugin } = require("webpack-plugin-vuetify");
 
 // Generate pages object
 const pages = {};
@@ -50,6 +51,7 @@ module.exports = {
     ]);
   },
   configureWebpack: {
+    plugins: [new VuetifyPlugin()],
     output: {
       filename: `[name].js`,
       chunkFilename: `[name].js`,

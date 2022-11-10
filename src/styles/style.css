@@ -1,0 +1,38 @@
+:root {
+  /* Default Colors as HEX Code */
+  --colorNotSoWhite: #f0f0f0;
+  --colorJasonBlu: #3c356d;
+  --colorOsmoWosmo: #462daf;
+  --colorOsmoIon: #2994d0;
+  --colorOsmoAmmelia: #ca2ebd;
+  --colorOsmoBullish: #29d0b2;
+  --colorOsmoBearish: #c6451c;
+  --colorOsmoVerse: #140f34;
+  /* Default Font-Families */
+  --fontNumbers: "IBM Plex Mono", monospace;
+  --fontText: "Inter", sans-serif;
+  --fontHeadings: "Poppins", sans-serif;
+}
+
+html {
+  font-family: var(--fontText);
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--colorNotSoWhite);
+}
+
+/* Setting the default bg color */
+body {
+  margin: 0;
+  background-color: var(--colorOsmoVerse);
+  color: var(--colorNotSoWhite);
+}
+
+.main_app {
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* width: 350px; */
+  display: flex;
+  flex-direction: column;
+}
