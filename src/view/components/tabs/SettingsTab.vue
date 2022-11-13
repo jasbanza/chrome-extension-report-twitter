@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <form-input
+  <!-- <form-input
       name="banlistUrl"
       type="URL"
       placeholder="https://myscamlist.com/list.txt"
@@ -23,22 +22,57 @@
       placeholder="This is a scam account. The real account is @RealAccount"
       value="">
       Additional Context
-    </form-input>
-    <v-radio-group inline>
+    </form-input> -->
+
+  <v-form refs="settings" class="pa-2">
+    <v-radio-group inline v-model="reportMode" label="Action to take">
       <v-radio label="Report & Block" value="REPORT_AND_BLOCK"></v-radio>
       <v-radio label="Report Only" value="REPORT"></v-radio>
     </v-radio-group>
-  </div>
+    <v-radio-group inline v-model="listSyncMode" label="Source of scam list">
+      <v-radio label="Remote" value="REMOTE"></v-radio>
+      <v-radio label="Local" value="LOCAL"></v-radio>
+    </v-radio-group>
+    <v-text-field
+      label="Remote List URL"
+      variant="outlined"
+      clearable></v-text-field>
+    <v-text-field
+      label="Scamlist update frequency (minutes)"
+      variant="outlined"
+      clearable></v-text-field>
+    <v-text-field
+      label="Additional Context"
+      variant="outlined"
+      clearable></v-text-field>
+    <v-btn-toggle label="Enable Custom List" variant="outlined"></v-btn-toggle>
+    <v-textarea label="Custom List" clearable variant="outlined"></v-textarea>
+
+    <v-switch
+      density="compact"
+      label="Show Reported"
+      color="green"
+      rounded
+      inset
+      class="ml-2 mb-0 h-1 b"
+      v-model="showReported"></v-switch>
+  </v-form>
 </template>
 
 <script>
 // import BaseButton from "./BaseButton.vue";
-import FormInput from "./FormInput.vue";
+// import FormInput from "./FormInput.vue";
 
 export default {
+  data() {
+    return {
+      reportMode: "REPORT_AND_BLOCK",
+      listSyncMode: "REMOTE",
+    };
+  },
   components: {
     // BaseButton: BaseButton,
-    FormInput: FormInput,
+    // FormInput: FormInput,
   },
   computed: {
     detached() {
@@ -48,6 +82,9 @@ export default {
   methods: {
     detach: btnDetachWindow_onClick,
     settings: btnSettings_onClick,
+    save: () => {
+      console.log(this.refs.settings);
+    },
   },
 };
 
@@ -67,10 +104,10 @@ function btnSettings_onClick() {
 </script>
 
 <style scoped>
-div {
+/* div {
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 5px;
-}
+} */
 </style>

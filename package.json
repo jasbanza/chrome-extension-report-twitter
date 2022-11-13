@@ -6,9 +6,11 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "build-watch": "vue-cli-service  --env.NODE_ENV=development build-watch --mode development"
+    "build-watch": "vue-cli-service  --env.NODE_ENV=development build-watch --mode development",
+    "dev": "npm run build-watch"
   },
   "dependencies": {
+    "@mdi/font": "^7.0.96",
     "core-js": "^3.8.3",
     "vue": "^3.2.13",
     "vuetify": "^3.0.0",

@@ -31,6 +31,7 @@ A Chrome extension to automate reporting of scam accounts on Twitter.
 #### Notifications:
 - [ ] Indicate remaining # unreported accounts in extension icon badge text.
 - [ ] Popup Notifications when there are new bans available.
+- [ ] Popup Notification when an account has successfully been reported and/or blocked.
 
 #### Deploy Extension:
 - [ ] Deploy to Chrome Web Store.

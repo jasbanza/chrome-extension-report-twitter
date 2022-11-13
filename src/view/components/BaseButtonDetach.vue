@@ -28,7 +28,7 @@ function btnDetachWindow_onClick() {
   window.open(
     window.location.origin + window.location.pathname + "?detached=true",
     "_blank",
-    "popup,location=off,height=535,width=400"
+    "popup,location=off,height=535,width=420"
   );
 }
 </script>
