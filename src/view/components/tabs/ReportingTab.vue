@@ -1,30 +1,30 @@
 <template>
-  <!-- text-h4 -->
   <v-tabs
-    v-model="currentDashboardSection"
-    bg-color="blue accent-4"
+    v-model="currentReportingSection"
+    bg-color="blue-darken-1"
+    slider-color="indigo-darken-3"
     centered
     grow
     density="compact">
-    <v-tab value="tab-unreported">
-      <v-icon class="mr-2">mdi-gavel</v-icon>
-      UNREPORTED
+    <v-tab value="tab-list">
+      <v-icon class="mr-2">mdi-list-status</v-icon>
+      Hit list
     </v-tab>
-    <v-tab value="tab-reported">
+    <v-tab value="tab-individual">
+      <v-icon class="mr-2">mdi-target-account</v-icon>
+      individual
+    </v-tab>
+    <v-tab value="tab-history">
       <v-icon class="mr-2">mdi-skull-crossbones</v-icon>
-      REPORTED
-    </v-tab>
-    <v-tab value="tab-logs">
-      <v-icon class="mr-2">mdi-clipboard-text-clock</v-icon>
-      LOG
+      Reported
     </v-tab>
   </v-tabs>
-  <v-window v-model="currentDashboardSection">
-    <v-window-item value="tab-unreported">
+  <v-window v-model="currentReportingSection">
+    <v-window-item value="tab-list">
       <div centered>
         <v-btn
           prepend-icon="mdi-play"
-          color="green darken-2"
+          color="green-darken-2"
           rounded="md"
           density="comfortable"
           class="ma-2"
@@ -35,7 +35,7 @@
         </v-btn>
         <v-btn
           prepend-icon="mdi-stop"
-          color="red darken-2"
+          color="red-darken-2"
           rounded="md"
           density="comfortable"
           class="ma-2"
@@ -45,7 +45,7 @@
         </v-btn>
         <v-btn
           prepend-icon="mdi-cloud-download-outline"
-          color="blue-grey darken-1"
+          color="blue-grey-darken-1"
           rounded="md"
           density="comfortable"
           class="ma-2">
@@ -56,9 +56,8 @@
         <v-checkbox
           density="compact"
           v-model="allScammersSelected"
-          @change="scammerToggleAll">
-          Select All
-        </v-checkbox>
+          @change="scammerToggleAll"
+          label="Select All"></v-checkbox>
       </div>
       <v-table
         density="compact"
@@ -70,60 +69,130 @@
           <tr>
             <th>Report</th>
             <th>Twitter Account</th>
-            <th>Type</th>
+            <th>Reason</th>
           </tr>
         </thead>
         <tbody>
           <template v-bind:key="scammer.url" v-for="scammer in scammers">
             <tr
-              v-if="!scammer.reported || (scammer.reported && showReported)"
-              :class="getClass(scammer.reported)"
+              v-if="!scammer.reported || scammer.reported"
               @click="scammer.selected = !scammer.selected">
               <td>
-                <input
-                  type="checkbox"
+                <v-checkbox
                   v-model="scammer.selected"
-                  @change="scammerToggled" />
+                  @change="scammerToggled"></v-checkbox>
               </td>
               <td>
-                <a
-                  :href="scammer.url"
-                  target="_blank"
-                  @click="scammer.selected = !scammer.selected">
+                <a :href="scammer.url" target="_blank" @click.stop="">
                   @{{ scammer.username }}
                 </a>
               </td>
-              <td>{{ scammer.type }}</td>
+              <td>{{ scammer.reason }}</td>
             </tr>
           </template>
         </tbody>
       </v-table>
     </v-window-item>
-    <v-window-item value="tab-reported">
+    <v-window-item value="tab-individual">
+      <v-form refs="individual">
+        <v-container class="px-10 pt-2 pb-1">
+          <v-btn
+            prepend-icon="mdi-play"
+            color="green-darken-2"
+            rounded="md"
+            density="comfortable"
+            class="ma-2"
+            :disabled="!individualSet"
+            v-show="!isReporting"
+            @click="startReportingIndividual">
+            Report
+          </v-btn>
+          <v-btn
+            prepend-icon="mdi-stop"
+            color="red-darken-2"
+            rounded="md"
+            density="comfortable"
+            class="ma-2"
+            v-show="isReporting"
+            @click="stopReporting">
+            Stop Reporting
+          </v-btn>
+        </v-container>
+        <v-container class="px-2 pt-0 pb-2">
+          <v-select
+            class="mt-2"
+            label="Report Reason"
+            variant="outlined"
+            density="compact"
+            prepend-icon="mdi-badge-account-alert"
+            :menu-props="{ bottom: true, offsetY: false }"
+            v-model="individual.reason"
+            :rules="rules.individual.reason"
+            :items="[
+              {
+                title: 'Scam Links - (tagging users, tweeting or retweeting)',
+                value: 'SCAM_LINKS',
+              },
+              {
+                title: 'Fake account - (impersonator / phishing)',
+                value: 'IMPERSONATOR',
+              },
+            ]"></v-select>
+          <v-text-field
+            label="Twitter Account URL"
+            :rules="rules.individual.url"
+            hint="https://twitter.com/scammeraccount"
+            variant="outlined"
+            density="compact"
+            prepend-icon="mdi-twitter"
+            v-model="individual.url"
+            class="mb-2"
+            clearable></v-text-field>
+          <!-- <v-text-field
+            label="Additional Context"
+            hint="Used when completing the reporting process..."
+            variant="outlined"
+            density="compact"
+            prepend-icon="mdi-gift-open"
+            v-model="individual.additionalContext"
+            clearable></v-text-field> -->
+          <v-textarea
+            :placeholder="individualContextPlaceholder"
+            rows="4"
+            persistent-hint
+            hint="Used to complete the reporting process."
+            prepend-icon="mdi-alert"
+            density="comfortable"
+            v-model="individual.additionalContext"
+            clearable
+            variant="outlined"></v-textarea>
+        </v-container>
+      </v-form>
+    </v-window-item>
+    <v-window-item value="tab-history">
       <v-table density="compact" fixed-header height="200" hover>
         <thead>
           <tr>
             <th>Twitter Account</th>
-            <th>Type</th>
+            <th>Reason</th>
           </tr>
         </thead>
         <tbody>
           <template v-bind:key="scammer.url" v-for="scammer in scammers">
-            <tr :class="getClass(scammer.reported)">
+            <tr>
               <td>
                 <a :href="scammer.url" target="_blank">
                   @{{ scammer.username }}
                 </a>
               </td>
-              <td>{{ scammer.type }}</td>
+              <td>{{ scammer.reason }}</td>
             </tr>
           </template>
         </tbody>
       </v-table>
     </v-window-item>
-    <v-window-item value="tab-logs">some more shit</v-window-item>
   </v-window>
-  <v-divider></v-divider>
+  <!-- <v-divider></v-divider> -->
 
   <v-snackbar v-model="events.starting" close-delay="1" color="green">
     Reporting Started...
@@ -163,12 +232,28 @@
 export default {
   data() {
     return {
-      currentDashboardSection: "tab-unreported",
+      currentReportingSection: "tab-individual",
       isReporting: false,
-      showReported: false /* TODO: remove this...*/,
       allScammersSelected: false,
       numUnreported: 2,
       numSelected: 0,
+      rules: {
+        reason: [(value) => !!value || "Required."],
+        individual: {
+          url: [
+            (value) => !!value || "Required.",
+            (value) => {
+              const pattern = /(https:\/\/)?twitter\.com\/([a-zA-Z0-9_]{3,})/;
+              return pattern.test(value) || "Invalid Twitter URL.";
+            },
+          ],
+        },
+      },
+      individual: {
+        reason: null,
+        url: "",
+        additionalContext: "",
+      },
       events: {
         failure: false,
         success: false,
@@ -182,19 +267,36 @@ export default {
           selected: false,
           url: "https://twitter.com/osmosis_02",
           username: "osmosis_02",
-          type: "Osmosis",
+          reason: "Osmosis",
         },
         {
           reported: false,
           selected: false,
           url: "https://twitter.com/carlyhawk65",
           username: "carlyhawk65",
-          type: "Other",
+          reason: "Other",
         },
       ],
     };
   },
   computed: {
+    individualContextPlaceholder() {
+      let context =
+        "Additional context to help motivate this account's suspension. ";
+      switch (this.individual.reason) {
+        case "SCAM_LINKS":
+          context += `
+- include example tweet(s)`;
+          break;
+        case "IMPERSONATOR":
+          context += `
+- mention who the user is impersonating.`;
+          break;
+        default:
+          break;
+      }
+      return context;
+    },
     scammersSelected() {
       if (this.scammers.find((scammer) => scammer.selected)) {
         return true;
@@ -250,17 +352,13 @@ export default {
     },
     // indeterminate,
   },
-  watch: {
-    // allScammersSelected: {
-    //   handler() {
-    //     this.scammerToggleAll();
-    //   },
-    // },
-  },
 };
 </script>
 
 <style scoped>
+.v-tab--selected {
+  background-color: #2196f3;
+}
 a {
   color: var(--colorOsmoIon);
 }

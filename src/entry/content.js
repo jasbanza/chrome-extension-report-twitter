@@ -20,9 +20,10 @@ const reporter = {
 };
 /**
  * When dom is loaded:
- * 1) get next target URL
- * 2) navigate to target URL if needed, or:
- * 3) allow reporting to continue
+ * 1) await report order from extension
+ * 2) iterate targets
+ * 3) navigate to target URL if needed, or:
+ * 4) allow reporting to continue
  */
 window.onload = function () {
   console.clear();

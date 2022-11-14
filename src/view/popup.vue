@@ -16,23 +16,30 @@
       <v-main>
         <v-tabs
           v-model="currentTab"
-          bg-color="indigo darken-3"
+          bg-color="indigo-darken-3"
           centered
           density="comfortable"
           grow
           @change="tabUpdated">
-          <v-tab value="tab-dashboard">
-            <v-icon class="mr-2">mdi-twitter</v-icon>
-            DASHBOARD
+          <v-tab value="tab-reporting">
+            <v-icon class="mr-2">mdi-gavel</v-icon>
+            REPORTING
+          </v-tab>
+          <v-tab value="tab-log">
+            <v-icon class="mr-2">mdi-clipboard-text-clock</v-icon>
+            LOG
           </v-tab>
           <v-tab value="tab-settings">
             <v-icon class="mr-2">mdi-cog-outline</v-icon>
-            Settings
+            SETTINGS
           </v-tab>
         </v-tabs>
-        <v-window v-model="currentTab">
-          <v-window-item value="tab-dashboard">
-            <dashboard-tab></dashboard-tab>
+        <v-window v-model="currentTab" height="300px">
+          <v-window-item value="tab-reporting">
+            <reporting-tab></reporting-tab>
+          </v-window-item>
+          <v-window-item value="tab-log">
+            <log-tab></log-tab>
           </v-window-item>
           <v-window-item value="tab-settings">
             <settings-tab></settings-tab>
@@ -44,7 +51,8 @@
 </template>
 
 <script>
-import DashboardTab from "./components/tabs/DashboardTab.vue";
+import ReportingTab from "./components/tabs/ReportingTab.vue";
+import LogTab from "./components/tabs/LogTab.vue";
 import SettingsTab from "./components/tabs/SettingsTab.vue";
 
 export default {
@@ -55,7 +63,8 @@ export default {
     };
   },
   components: {
-    DashboardTab: DashboardTab,
+    ReportingTab: ReportingTab,
+    LogTab: LogTab,
     SettingsTab: SettingsTab,
   },
   computed: {
@@ -69,7 +78,7 @@ export default {
       window.open(
         window.location.origin + window.location.pathname + "?undocked=true",
         "_blank",
-        "popup,location=off,height=535,width=420"
+        "popup,location=off,height=540,width=424"
       );
     },
     toggleTheme() {
@@ -77,7 +86,7 @@ export default {
       this.theme = this.theme == "light" ? "dark" : "light";
     },
     tabUpdated() {
-      document.documentElement.style.overflowY = "auto";
+      // document.documentElement.style.overflowY = "auto";
     },
   },
 };
@@ -88,6 +97,9 @@ export default {
 @import "../styles/style.css"; */
 </style>
 <style scoped>
+.v-tab--selected {
+  background-color: #303f9f;
+}
 .header {
   display: inline-flex;
   justify-content: space-evenly; /* center the content horizontally */
@@ -99,6 +111,9 @@ export default {
 }
 
 .popup-div {
-  min-width: 420px;
+  min-width: 405px;
+  max-width: 415px;
+  min-height: 500px;
+  max-height: 500px;
 }
 </style>
