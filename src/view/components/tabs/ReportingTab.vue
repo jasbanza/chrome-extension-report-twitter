@@ -29,7 +29,7 @@
           density="comfortable"
           class="ma-2"
           :disabled="!scammersSelected"
-          v-show="!isReporting"
+          v-show="!reporting"
           @click="startReporting">
           Start Reporting
         </v-btn>
@@ -39,7 +39,7 @@
           rounded="md"
           density="comfortable"
           class="ma-2"
-          v-show="isReporting"
+          v-show="reporting"
           @click="stopReporting">
           Stop Reporting
         </v-btn>
@@ -102,8 +102,8 @@
             rounded="md"
             density="comfortable"
             class="ma-2"
-            :disabled="!individualSet"
-            v-show="!isReporting"
+            :disabled="!individualValid"
+            v-show="!reporting"
             @click="startReportingIndividual">
             Report
           </v-btn>
@@ -113,7 +113,7 @@
             rounded="md"
             density="comfortable"
             class="ma-2"
-            v-show="isReporting"
+            v-show="reporting"
             @click="stopReporting">
             Stop Reporting
           </v-btn>
@@ -126,7 +126,7 @@
             density="compact"
             prepend-icon="mdi-badge-account-alert"
             :menu-props="{ bottom: true, offsetY: false }"
-            v-model="individual.reason"
+            v-model="reason"
             :rules="rules.individual.reason"
             :items="[
               {
@@ -145,7 +145,7 @@
             variant="outlined"
             density="compact"
             prepend-icon="mdi-twitter"
-            v-model="individual.url"
+            v-model="url"
             class="mb-2"
             clearable></v-text-field>
           <!-- <v-text-field
@@ -163,7 +163,7 @@
             hint="Used to complete the reporting process."
             prepend-icon="mdi-alert"
             density="comfortable"
-            v-model="individual.additionalContext"
+            v-model="additionalContext"
             clearable
             variant="outlined"></v-textarea>
         </v-container>
@@ -194,52 +194,47 @@
   </v-window>
   <!-- <v-divider></v-divider> -->
 
-  <v-snackbar v-model="events.starting" close-delay="1" color="green">
+  <v-snackbar v-model="starting" close-delay="1" color="green">
     Reporting Started...
     <template v-slot:actions>
-      <v-btn color="white" variant="text" @click="events.starting = false">
+      <v-btn color="white" variant="text" @click="starting = false">
         Close
       </v-btn>
     </template>
   </v-snackbar>
-  <v-snackbar v-model="events.stopping" close-delay="1" color="red">
+  <v-snackbar v-model="stopping" close-delay="1" color="red">
     Reporting Stopped.
     <template v-slot:actions>
-      <v-btn color="white" variant="text" @click="events.stopping = false">
+      <v-btn color="white" variant="text" @click="stopping = false">
         Close
       </v-btn>
     </template>
   </v-snackbar>
-  <v-snackbar v-model="events.success" close-delay="1" color="green">
+  <v-snackbar v-model="success" close-delay="1" color="green">
     Report successful
     <template v-slot:actions>
-      <v-btn color="white" variant="text" @click="events.success = false">
-        Close
-      </v-btn>
+      <v-btn color="white" variant="text" @click="success = false">Close</v-btn>
     </template>
   </v-snackbar>
-  <v-snackbar v-model="events.failure" close-delay="1" color="red">
+  <v-snackbar v-model="failure" close-delay="1" color="red">
     Unable to complete report
     <template v-slot:actions>
-      <v-btn color="white" variant="text" @click="events.failure = false">
-        Close
-      </v-btn>
+      <v-btn color="white" variant="text" @click="failure = false">Close</v-btn>
     </template>
   </v-snackbar>
 </template>
 
 <script>
+import { mapFields } from "vuex-map-fields";
 export default {
   data() {
     return {
+      individualValid: false,
       currentReportingSection: "tab-individual",
-      isReporting: false,
-      allScammersSelected: false,
-      numUnreported: 2,
       numSelected: 0,
       rules: {
-        reason: [(value) => !!value || "Required."],
         individual: {
+          reason: [(value) => !!value || "Required."],
           url: [
             (value) => !!value || "Required.",
             (value) => {
@@ -249,17 +244,12 @@ export default {
           ],
         },
       },
-      individual: {
-        reason: null,
-        url: "",
-        additionalContext: "",
-      },
       events: {
         failure: false,
         success: false,
         starting: false,
         stopping: false,
-        completed: false,
+        done: false,
       },
       scammers: [
         {
@@ -280,10 +270,24 @@ export default {
     };
   },
   computed: {
+    ...mapFields("hitlist", [
+      "accounts",
+      "numUnreported",
+      "allScammersSelected",
+    ]),
+    ...mapFields("individual", ["reason", "url", "additionalContext"]),
+    ...mapFields("events", [
+      "reporting",
+      "starting",
+      "stopping",
+      "success",
+      "failure",
+      "done",
+    ]),
     individualContextPlaceholder() {
       let context =
         "Additional context to help motivate this account's suspension. ";
-      switch (this.individual.reason) {
+      switch (this.reason) {
         case "SCAM_LINKS":
           context += `
 - include example tweet(s)`;
@@ -304,11 +308,55 @@ export default {
       return false;
     },
   },
+  watch: {
+    reason() {
+      this.validateAndUpdateLS();
+    },
+    url() {
+      this.validateAndUpdateLS();
+    },
+    additionalContext() {
+      this.validateAndUpdateLS();
+    },
+  },
   methods: {
+    initVuexStoreFromChromeStorage() {
+      chrome.storage.local.get(["individual"], (res) => {
+        this.reason = res?.individual?.reason || "";
+        this.url = res?.individual?.url || "";
+        this.additionalContext = res?.individual?.additionalContext || "";
+      });
+    },
+    updateLS() {
+      chrome.storage.local.set({
+        individual: this.$store.state.individual,
+      });
+    },
+    validateAndUpdateLS() {
+      this.validateIndividual();
+      this.updateLS();
+    },
+    validateIndividual() {
+      let isValid = true;
+      for (const fn of this.rules.individual.url) {
+        if (fn(this.url) != true) {
+          isValid = false;
+        }
+      }
+      for (const fn of this.rules.individual.reason) {
+        if (fn(this.reason) != true) {
+          isValid = false;
+        }
+      }
+      return (this.individualValid = isValid);
+    },
     getClass(isReported) {
       if (isReported) {
         return "green";
       }
+    },
+    startReportingIndividual() {
+      chrome.runtime.sendMessage({ action: "doAlert" });
     },
     onReported() {
       this.setEvent("success");
@@ -318,19 +366,25 @@ export default {
       this.setEvent("failure");
       // todo: chrome notification popup
     },
+    onDone() {
+      this.setEvent("done");
+      // todo: chrome notification popup
+    },
     startReporting() {
       this.setEvent("starting");
-      this.isReporting = true;
+      this.$store.events.commit("reporting", true);
     },
     stopReporting() {
       this.setEvent("stopping");
-      this.isReporting = false;
     },
     setEvent(e) {
       for (const key in this.events) {
-        this.events[key] = false;
+        if (e == key) {
+          this.$store.events.commit(key, true);
+        } else {
+          this.$store.events.commit(key, false);
+        }
       }
-      this.events[e] = true;
     },
     scammerToggleAll() {
       for (const scammer of this.scammers) {
@@ -351,6 +405,9 @@ export default {
       this.allScammersSelected = selected == unreported;
     },
     // indeterminate,
+  },
+  created() {
+    this.initVuexStoreFromChromeStorage();
   },
 };
 </script>

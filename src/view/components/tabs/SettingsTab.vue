@@ -67,13 +67,17 @@
         </v-radio-group>
         <v-text-field
           v-if="listSourceMode == 'REMOTE'"
-          label="Remote List URL"
+          v-model="remoteUrl"
+          label="Remote Google Sheets URL"
+          hint="Copy the URL from the correct sheet!"
           variant="outlined"
           density="comfortable"
           prepend-icon="mdi-satellite-uplink"
+          class="mb-2"
           clearable></v-text-field>
         <v-text-field
           v-if="listSourceMode == 'REMOTE'"
+          v-model="remoteUpdateFrequencyMinutes"
           label="List Update Frequency"
           variant="outlined"
           density="comfortable"
@@ -82,6 +86,7 @@
           clearable></v-text-field>
         <v-textarea
           v-if="listSourceMode == 'LOCAL'"
+          v-model="scamlist"
           label="Custom List"
           hint="One line per twitter account URL"
           persistent-hint
@@ -101,47 +106,83 @@
 // import BaseButton from "./BaseButton.vue";
 // import FormInput from "./FormInput.vue";
 
+// import store from "@/store";
+
+// eslint-disable-next-line
+// import { mapGetters, mapState, mapMutations } from "vuex";
+import { mapFields } from "vuex-map-fields";
+
 export default {
   data() {
     return {
-      defaultContextImpersonator: "This is a phishing account",
-      defaultContextScamLinks: "This account shares & tags users in scams.",
       currentSettingsSection: "tab-behavior",
-      reportMode: "REPORT_AND_BLOCK",
-      listSourceMode: "REMOTE",
     };
-  },
-  components: {
-    // BaseButton: BaseButton,
-    // FormInput: FormInput,
   },
   computed: {
     detached() {
       return window.location.search.includes("detached=true");
     },
+    ...mapFields("settings", [
+      "remoteUrl",
+      "remoteUpdateFrequencyMinutes",
+      "defaultContextImpersonator",
+      "defaultContextScamLinks",
+      "reportMode",
+      "listSourceMode",
+    ]),
+    ...mapFields("scamlistLocal", ["scamlist"]),
   },
-  methods: {
-    detach: btnDetachWindow_onClick,
-    settings: btnSettings_onClick,
-    save: () => {
-      console.log(this.refs.settings);
+  watch: {
+    remoteUrl() {
+      this.saveSettings();
+    },
+    remoteUpdateFrequencyMinutes() {
+      this.saveSettings();
+    },
+    defaultContextImpersonator() {
+      this.saveSettings();
+    },
+    defaultContextScamLinks() {
+      this.saveSettings();
+    },
+    reportMode() {
+      this.saveSettings();
+    },
+    listSourceMode() {
+      this.saveSettings();
     },
   },
+  methods: {
+    saveSettings() {
+      console.log("saving settings to chrome localstorage");
+      chrome.storage.sync.set({
+        settings: this.$store.state.settings,
+      });
+    },
+    loadSettings() {
+      chrome.storage.sync.get("settings").then((res) => {
+        if (res.settings) {
+          const s = res.settings;
+          this.remoteUrl =
+            s.remoteURL ||
+            "https://raw.githubusercontent.com/jasbanza/chrome-extension-report-twitter/main/scamlist.txt";
+          this.remoteUpdateFrequencyMinutes =
+            s.remoteUpdateFrequencyMinutes || "15";
+          this.defaultContextImpersonator =
+            s.defaultContextImpersonator || "This is a phishing account.";
+          this.defaultContextScamLinks =
+            s.defaultContextScamLinks ||
+            "This account shares & tags users in scams.";
+          this.reportMode = s.reportMode || "REPORT_AND_BLOCK";
+          this.listSourceMode = s.listSourceMode || "LOCAL";
+        }
+      });
+    },
+  },
+  created() {
+    this.loadSettings();
+  },
 };
-
-function btnDetachWindow_onClick() {
-  window.close();
-  window.open(
-    "popup.html?detached=true",
-    "_blank",
-    "popup,location=off,height=535,width=400"
-  );
-}
-
-function btnSettings_onClick() {
-  //   chrome.runtime.openOptionsPage();
-  window.location.href = "options.html";
-}
 </script>
 
 <style scoped>

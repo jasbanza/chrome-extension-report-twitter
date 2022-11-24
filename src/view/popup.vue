@@ -5,10 +5,15 @@
       <v-app-bar density="comfortable" center elevation="3">
         <v-img src="assets/icon_48.png" max-width="40px" class="ms-3"></v-img>
         <v-app-bar-title>Twitter Auto Reporter</v-app-bar-title>
-        <v-btn icon @click="toggleTheme">
+        <v-btn icon @click="toggleNotifications" size="small">
+          <v-icon>
+            {{ notifications ? "mdi-bell-ring" : "mdi-bell-off" }}
+          </v-icon>
+        </v-btn>
+        <v-btn icon @click="toggleTheme" size="small">
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-btn>
-        <v-btn icon v-if="!undocked" @click="undockPopup">
+        <v-btn icon v-if="!undocked" @click="undockPopup" size="small">
           <v-icon>mdi-dock-window</v-icon>
         </v-btn>
       </v-app-bar>
@@ -19,8 +24,7 @@
           bg-color="indigo-darken-3"
           centered
           density="comfortable"
-          grow
-          @change="tabUpdated">
+          grow>
           <v-tab value="tab-reporting">
             <v-icon class="mr-2">mdi-gavel</v-icon>
             REPORTING
@@ -55,6 +59,8 @@ import ReportingTab from "./components/tabs/ReportingTab.vue";
 import LogTab from "./components/tabs/LogTab.vue";
 import SettingsTab from "./components/tabs/SettingsTab.vue";
 
+import { mapFields } from "vuex-map-fields";
+
 export default {
   data() {
     return {
@@ -71,6 +77,21 @@ export default {
     undocked() {
       return window.location.search.includes("undocked=true");
     },
+    ...mapFields("settings", ["notifications"]),
+  },
+  watch: {
+    theme(val) {
+      chrome.runtime.sendMessage({
+        action: "setTheme",
+        value: val,
+      });
+    },
+    notifications(val) {
+      chrome.runtime.sendMessage({
+        action: "setNotifications",
+        value: val,
+      });
+    },
   },
   methods: {
     undockPopup() {
@@ -85,9 +106,55 @@ export default {
       // this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
       this.theme = this.theme == "light" ? "dark" : "light";
     },
-    tabUpdated() {
-      // document.documentElement.style.overflowY = "auto";
+    toggleNotifications() {
+      // this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
+      this.notifications = !this.notifications;
+      this.saveSettings();
     },
+    saveSettings() {
+      console.log("saving settings to chrome localstorage");
+      chrome.storage.sync.set({
+        settings: this.$store.state.settings,
+      });
+    },
+    loadSettings() {
+      chrome.storage.sync.get("settings").then((res) => {
+        if (res.settings) {
+          const s = res.settings;
+          this.notifications = s.notifications || false;
+        }
+      });
+    }
+  },
+  created() {
+    this.loadSettings();
+
+    chrome.storage.sync.get("theme").then((res) => {
+      if (res.theme) {
+        this.theme = res.theme;
+      }
+    });
+
+    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+      if (msg.action) {
+        switch (msg.action) {
+          case "setTheme":
+            this.theme = msg.value;
+            sendResponse({
+              status: "ok",
+            });
+            break;
+          case "setNotifications":
+            this.notifications = msg.value;
+            sendResponse({
+              status: "ok",
+            });
+            break;
+          default:
+            break;
+        }
+      }
+    });
   },
 };
 </script>
@@ -113,7 +180,7 @@ export default {
 .popup-div {
   min-width: 405px;
   max-width: 415px;
-  min-height: 500px;
-  max-height: 500px;
+  min-height: 505px;
+  max-height: 505px;
 }
 </style>

@@ -27,7 +27,22 @@ const reporter = {
  */
 window.onload = function () {
   console.clear();
-  reporter.start();
+
+  // TODO: if whitelisted, then return
+  addButton();
+  // console.log("chrome runtime message: notifyNewScammers...");
+  // chrome.runtime.sendMessage(
+  //   {
+  //     action: "notifyNewScammers",
+  //   },
+  //   function (res) {
+  //     console.log("notifyNewScammers:");
+  //     console.log(res);
+  //   }
+  // );
+  // TODO: change this behaviour to respond to orders instead
+  /*
+  // reporter.start();
 
   // Select the node that will be observed for mutations
   const targetNode = document.querySelector("body");
@@ -52,6 +67,7 @@ window.onload = function () {
   reporter.observer.observe(targetNode, config);
 
   //   reporter.observer.disconnect();
+  */
 };
 
 /**
@@ -165,6 +181,77 @@ async function getNextTarget(reason = "INIT") {
       } else {
         window.location.href = reporter.target.url;
       }
+    }
+  );
+}
+
+/**
+ * adds button to page, once clicked, sets chrome.storage "individual.url" to current tab's url, and opens popup to the individual tab
+ */
+const addButton = function () {
+  console.log("Twitter Report Extension: Content script: adding report button");
+  const reportDiv = document.createElement("div");
+  reportDiv.innerHTML = `
+  <div>  
+    Report Account 
+  </div>
+  <style>
+    #reportDiv {
+      display: flex;
+      position: fixed;
+      justify-content: center;
+      top: 0;
+      right: 0;
+      left: 0;
+    }
+    
+    #reportDiv div {
+      color: white;
+      font-family: sans-serif;
+      background-color: #ff0000e0;
+      border-bottom-left-radius: 5px;
+      border-bottom-right-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      padding: 5px;
+    }
+    #reportDiv div:hover {
+      font-size: 1.2em;
+      background-color: #ff0000f0;
+    }
+  </style>
+  `;
+  reportDiv.id = "reportDiv";
+  document.body.appendChild(reportDiv);
+  document
+    .querySelector(`#${reportDiv.id} div`)
+    .addEventListener("click", () => {
+      // 1. set chrome local storage for individual
+      console.log("here");
+      const objIndividual = {
+        url: window.location.href,
+      };
+      chrome.storage.local.set(
+        {
+          individual: objIndividual,
+        },
+        openWindow
+      );
+    });
+};
+
+// eslint-disable-next-line
+function openWindow() {
+  chrome.runtime.sendMessage(
+    {
+      action: "openPopup",
+      options: { tab: "individual" },
+    },
+    function (res) {
+      console.log(
+        "Twitter Report Extension: Content script: chrome.runtime.sendMessage openPopup"
+      );
+      console.log(res);
     }
   );
 }

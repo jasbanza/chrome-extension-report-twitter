@@ -1,6 +1,5 @@
 <template>
-  <!-- text-h4 -->
-  LOGS
+  <div>LOGS</div>
 </template>
 
 <script>
@@ -14,4 +13,9 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+div {
+  width: 100%;
+  height: 100%;
+}
+</style>
